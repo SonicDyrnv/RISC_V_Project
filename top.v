@@ -25,6 +25,10 @@ module top (
             dmem[1] <= 32'd0;
             dmem[2] <= 32'd0;
             dmem[3] <= 32'd0;
+            dmem[4] <= 32'd0;
+            dmem[5] <= 32'd0;
+            dmem[6] <= 32'd0;
+            dmem[7] <= 32'd0;
         end else if (data_we) begin
             dmem[data_addr[11:2]] <= data_wd;
         end
@@ -33,14 +37,14 @@ module top (
     assign data_rd = dmem[data_addr[11:2]];
 
     cpu cpu_inst (
-        .clk      (clk),
-        .rst      (rst),
+        .clk       (clk),
+        .rst       (rst),
         .instr_addr(instr_addr),
-        .instr_in (instr_in),
-        .data_addr(data_addr),
-        .data_wd  (data_wd),
-        .data_rd  (data_rd),
-        .data_we  (data_we),
-        .mem_req  (mem_req)
+        .instr_in  (instr_in),
+        .data_addr (data_addr),
+        .data_wd   (data_wd),
+        .data_rd   (data_rd),
+        .data_we   (data_we),
+        .mem_req   (mem_req)
     );
 endmodule

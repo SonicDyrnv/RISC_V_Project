@@ -1,15 +1,8 @@
 // Control Unit Module
-// Implement instruction decode stage of the CPU,
-// generating all necessary control signals based on the instruction
-// fields: opcode, funct3, and funct7.
-// instructions including R-type, I-type, Load (LW), Store (SW),
-// Branch (BEQ-type), and Jump (JAL).
-// The control unit determines data path behavior such as register
-// write enable, memory access control, ALU operation selection,
-// immediate type selection, and branch/jump decisions. 
-// ALU operations are encoded into a 4-bit signal and mapped according
-// to instruction type and function fields. This module is purely
-// combinational and is critical for correct instruction execution.
+// Generates all necessary control signals based on instruction fields.
+// Supports R-type, I-type, Load (LW), Store (SW),
+// Branch (BEQ, BNE, BLT, BGE), and Jump (JAL).
+// funct3 for branches is passed through to the CPU for branch condition evaluation.
 
 module control_unit (
     input  [6:0]  opcode,
@@ -22,7 +15,8 @@ module control_unit (
     output reg [1:0]  imm_src,
     output reg        branch,
     output reg        jump,
-    output reg [3:0]  alu_op
+    output reg [3:0]  alu_op,
+    output reg [2:0]  branch_type
 );
     // Opcode constants
     localparam R_TYPE = 7'b0110011;
@@ -34,14 +28,15 @@ module control_unit (
 
     always @(*) begin
         // Safe defaults
-        reg_write = 1'b0;
-        mem_read  = 1'b0;
-        mem_write = 1'b0;
-        alu_src   = 1'b0;
-        imm_src   = 2'b00;
-        branch    = 1'b0;
-        jump      = 1'b0;
-        alu_op    = 4'b0000;
+        reg_write   = 1'b0;
+        mem_read    = 1'b0;
+        mem_write   = 1'b0;
+        alu_src     = 1'b0;
+        imm_src     = 2'b00;
+        branch      = 1'b0;
+        jump        = 1'b0;
+        alu_op      = 4'b0000;
+        branch_type = 3'b000;
 
         case (opcode)
             R_TYPE: begin
@@ -49,12 +44,12 @@ module control_unit (
                 alu_src   = 1'b0;
                 case (funct3)
                     3'b000: alu_op = (funct7 == 7'b0100000) ? 4'b0001 : 4'b0000; // SUB : ADD
-                    3'b111: alu_op = 4'b0010; // AND  (FIX: was 4'b0011)
-                    3'b110: alu_op = 4'b0011; // OR   (FIX: was 4'b0100)
-                    3'b100: alu_op = 4'b0100; // XOR  (FIX: was 4'b0101)
+                    3'b111: alu_op = 4'b0010; // AND
+                    3'b110: alu_op = 4'b0011; // OR
+                    3'b100: alu_op = 4'b0100; // XOR
                     3'b010: alu_op = 4'b0101; // SLT
                     3'b001: alu_op = 4'b0110; // SLL
-                    3'b101: alu_op = (funct7 == 7'b0000000) ? 4'b0111 : 4'b0000; // SRL : (no SRA)
+                    3'b101: alu_op = (funct7 == 7'b0100000) ? 4'b1000 : 4'b0111; // SRA : SRL
                     default: alu_op = 4'b0000;
                 endcase
             end
@@ -69,7 +64,7 @@ module control_unit (
                     3'b100: alu_op = 4'b0100; // XORI
                     3'b010: alu_op = 4'b0101; // SLTI
                     3'b001: alu_op = 4'b0110; // SLLI
-                    3'b101: alu_op = 4'b0111; // SRLI
+                    3'b101: alu_op = (funct7 == 7'b0100000) ? 4'b1000 : 4'b0111; // SRAI : SRLI
                     default: alu_op = 4'b0000;
                 endcase
             end
@@ -87,10 +82,11 @@ module control_unit (
                 alu_op    = 4'b0000; // ADD for address calc
             end
             BR: begin
-                branch  = 1'b1;
-                alu_src = 1'b0;
-                imm_src = 2'b10;
-                alu_op  = 4'b0001; // SUB to compare (zero flag)
+                branch      = 1'b1;
+                alu_src     = 1'b0;
+                imm_src     = 2'b10;
+                alu_op      = 4'b0001; // SUB for comparison
+                branch_type = funct3;  // Pass funct3 to CPU for condition eval
             end
             JAL: begin
                 reg_write = 1'b1;

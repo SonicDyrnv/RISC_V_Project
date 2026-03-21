@@ -1,7 +1,3 @@
-// I am using such declarations because I couldn't simulate 2d registers
-// So I choose to go with such declarations
-// reason as far as I know verilog don't support it 
-
 module reg_file (
     input         clk,
     input         rst,

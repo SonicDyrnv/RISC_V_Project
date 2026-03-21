@@ -1,6 +1,5 @@
 /* ALU Module
-   I have tried to cover all the cases I could see
-   Supports: ADD, SUB, AND, OR, XOR, SLT, SLL, SRL */
+   Supports: ADD, SUB, AND, OR, XOR, SLT, SLL, SRL, SRA */
 module alu (
     input  [31:0] a,
     input  [31:0] b,
@@ -17,6 +16,7 @@ module alu (
             4'b0101: result = ($signed(a) < $signed(b)) ? 32'd1 : 32'd0; // SLT (signed)
             4'b0110: result = a << b[4:0];              // SLL
             4'b0111: result = a >> b[4:0];              // SRL
+            4'b1000: result = $signed(a) >>> b[4:0];    // SRA
             default: result = 32'd0;
         endcase
     end
