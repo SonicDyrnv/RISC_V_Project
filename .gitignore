@@ -1,0 +1,5 @@
+sim
+simv
+sim.out
+*.vvp
+*.vcd
